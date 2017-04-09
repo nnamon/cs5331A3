@@ -197,6 +197,8 @@ admin
 admin_
 admin_login
 admin_logon
+admin/index.php?page=login
+admin/index.php
 adminhelp
 administrat
 administration
@@ -376,7 +378,6 @@ ca
 cache
 cachemgr
 cad
-calendar
 campaign
 can
 canada
@@ -1897,6 +1898,7 @@ wstats
 wusage
 wwhelp
 www
+www/js
 wwwboard
 wwwjoin
 wwwlog

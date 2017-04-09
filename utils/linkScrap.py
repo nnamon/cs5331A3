@@ -53,7 +53,7 @@ class A3Spider(scrapy.Spider):
 					url = url.replace("200 ", "")
 					splitString = cleanUp(url)
 					yield {
-						'injection_point' : splitString[0],
+						'injection_point' : splitString[0][1:],
 						'param' : splitString[1], 
 					}
 					return
@@ -89,12 +89,14 @@ def cleanUp(cleanThis):
 
 def main():
 	rhostDomains = []
+	rhostList = []
 	try:
 		rhosts = sys.argv[1]
 		rhostList = open(rhosts, "r").readlines()
 		wordList = open("wordlist.txt", "r").readlines()
 	except:
 		print ("Something went wrong in args")
+	print(rhostList)
 	for rhost in rhostList:
 		rhost = rhost.strip()
 		#brute force testing for possible hidden directories.

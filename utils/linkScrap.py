@@ -23,40 +23,35 @@ lookFor = "root:x:0:0:"
 
 class A3Spider(scrapy.Spider):
 	name = "a3"
+	handle_httpstatus_list = [301, 302, 500]
 	custom_settings = {
-		'DEPTH_LIMIT' : '3',
+		'DEPTH_LIMIT' : '7',
 	}
 	def parse(self, response):
-		#TODO: check if is infinite loop
-		#Calendar in app1 causes infinite loop now.
-
-
+		print(response)
 		# I'm just going to assume the login forms won't appear again.
-		try:
-			usernameLogin = response.xpath('//input[@name="username"]').extract_first()
+		try:	#TODO: need a better way to check for username fields
+			usernameLogin = response.xpath('//input[@name="username" or @type="text"] ').extract_first()
 			passwordLogin = response.xpath('//input[@name="password" or @type="password"]').extract_first()
-
-			#TODO: password and username wordlists?
-			#TODO: ADD USER LOGINS
-			if usernameLogin is not None and passwordLogin is not None:
+			#TODO: password and username wordlists? currently only use admin/admin combos
+			if (len(usernameLogin) != 0)  and (len(passwordLogin) != 0):
 				#test for csrftokens
-				token1 = response.xpath('//input[@name="csrftoken"and @type="hidden"]')
-				token2 = response.xpath('//input[@name="csrfmiddlewaretoken" and @type="hidden"]')
-				if token1 is not None:
-					return scrapy.FormRequest.from_response(response,formdata={'username' : 'admin', 
-													'password' : 'admin' ,
-													 'csrftoken' : token1}, callback = self.parse)
-				elif token2 is not None:
-					return scrapy.FormRequest.from_response(response,formdata={'username' : 'admin', 
-													'password' : 'admin', 
-													'csrfmiddlewaretoken' : token2},callback = self.parse)
+				usernameField = usernameLogin.split("name=")[1].replace('"', "").replace(">", "")
+				passwordField = passwordLogin.split("name=")[1].replace('"', "").replace(">", "")
+				token1 = response.xpath('//input[@type="hidden"]')
+				if len(token1) !=0:
+					tokenField = token1.split("name=")[1].split('"')[1]
+					tokenValue = token1.split("value")[1].split('"')[1]
+					yield FormRequest.from_response(response,formdata={usernameField : 'admin', 
+													passwordField : 'admin' ,
+													 tokenField  : tokenValue}, callback = self.parse)
 				else:
-					return scrapy.FormRequest.from_response(response,formdata={'username' : 'admin',
-													 'password' : 'admin'}, callback = self.parse)
+					print("LOGGING INNNNNN")
+					yield FormRequest.from_response(response,formdata={usernameField : 'admin',
+													 passwordField : 'admin'}, callback = self.parse)
 		except Exception as e:
 			pass
 
-		print(response)
 		# parse for lfi	
 		for testThis in testList:
 			testFileInclusion = response.urljoin(testThis)
@@ -158,7 +153,6 @@ def main():
 	})
 	#empty file. Scrapy appends results by default.
 	with open('result.json', 'w+'): pass
-
 	#Starting crawler.
 	process.crawl(A3Spider, allowed_domains=rhostDomains, start_urls=scrapList)
 	process.start()

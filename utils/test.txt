@@ -1,0 +1,8 @@
+{"https://app3.com/main.php": [{"type": "GET"}, {}]}
+{"https://app3.com/windows/leakscan.php": [{"type": "GET"}, {}]}
+{"https://app3.com/main.php": [{"type": "GET"}, {}]}
+{"https://app3.com/windows/function.php": [{"type": "GET"}, {"start": ["\" start \""], "end": ["\" end"], "file": ["\" file \""]}]}
+{"https://app3.com/windows/help.php": [{"type": "GET"}, {"function": ["\" thefunction \""], "files": ["\" files \""], "get": ["\" get \""], "server": ["\" server"], "cookie": ["\" cookie \""], "post": ["\" post \""], "type": ["\" type \""]}]}
+{"https://app3.com/windows/hotpatch.php": [{"type": "GET"}, {"files": ["\" files \""], "get": ["\" get \""], "server": ["\" server"], "cookie": ["\" cookie \""], "file": ["\" file \""], "post": ["\" post \""]}]}
+{"https://app3.com/windows/code.php": [{"type": "GET"}, {"lines": ["\" lines"], "file": ["\" file \""]}]}
+{"https://app3.com/windows/exploit.php": [{"type": "GET"}, {"files": ["\" files \""], "get": ["\" get \""], "server": ["\" server"], "cookie": ["\" cookie \""], "file": ["\" file \""], "post": ["\" post \""]}]}

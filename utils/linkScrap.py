@@ -25,7 +25,7 @@ class A3Spider(scrapy.Spider):
 	name = "a3"
 	handle_httpstatus_list = [301, 302, 500]
 	custom_settings = {
-		'DEPTH_LIMIT' : '7',
+		'DEPTH_LIMIT' : '5',
 	}
 	def parse(self, response):
 		print(response)

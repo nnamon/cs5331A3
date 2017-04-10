@@ -23,33 +23,39 @@ lookFor = "root:x:0:0:"
 
 class A3Spider(scrapy.Spider):
 	name = "a3"
-
+	custom_settings = {
+		'DEPTH_LIMIT' : '3',
+	}
 	def parse(self, response):
 		#TODO: check if is infinite loop
 		#Calendar in app1 causes infinite loop now.
 
 
 		# I'm just going to assume the login forms won't appear again.
-		usernameLogin = response.xpath('//input[@name="username"]').extract_first()
-		passwordLogin = response.xpath('//input[@name="password" or @type="password"]').extract_first()
+		try:
+			usernameLogin = response.xpath('//input[@name="username"]').extract_first()
+			passwordLogin = response.xpath('//input[@name="password" or @type="password"]').extract_first()
 
-		#TODO: password and username wordlists?
-		#TODO: ADD USER LOGINS
-		if usernameLogin is not None and passwordLogin is not None:
-			#test for csrftokens
-			token1 = response.xpath('//input[@name="csrftoken"and @type="hidden"]')
-			token2 = response.xpath('//input[@name="csrfmiddlewaretoken" and @type="hidden"]')
-			if token1 is not None:
-				return scrapy.FormRequest.from_response(response,formdata={'username' : 'admin', 
-												'password' : 'admin' ,
-												 'csrftoken' : token1}, callback = self.parse)
-			elif token2 is not None:
-				return scrapy.FormRequest.from_response(response,formdata={'username' : 'admin', 
-												'password' : 'admin', 
-												'csrfmiddlewaretoken' : token2},callback = self.parse)
-			else:
-				return scrapy.FormRequest.from_response(response,formdata={'username' : 'admin',
-												 'password' : 'admin'}, callback = self.parse)
+			#TODO: password and username wordlists?
+			#TODO: ADD USER LOGINS
+			if usernameLogin is not None and passwordLogin is not None:
+				#test for csrftokens
+				token1 = response.xpath('//input[@name="csrftoken"and @type="hidden"]')
+				token2 = response.xpath('//input[@name="csrfmiddlewaretoken" and @type="hidden"]')
+				if token1 is not None:
+					return scrapy.FormRequest.from_response(response,formdata={'username' : 'admin', 
+													'password' : 'admin' ,
+													 'csrftoken' : token1}, callback = self.parse)
+				elif token2 is not None:
+					return scrapy.FormRequest.from_response(response,formdata={'username' : 'admin', 
+													'password' : 'admin', 
+													'csrfmiddlewaretoken' : token2},callback = self.parse)
+				else:
+					return scrapy.FormRequest.from_response(response,formdata={'username' : 'admin',
+													 'password' : 'admin'}, callback = self.parse)
+		except Exception as e:
+			pass
+
 		print(response)
 		# parse for lfi	
 		for testThis in testList:
@@ -62,29 +68,36 @@ class A3Spider(scrapy.Spider):
 		#TODO: find input tags and try code injection
 
 		# follow links
-		nextLinks = response.css('a::attr(href)').extract()
-		if nextLinks is not None:
-			for link in nextLinks:
-				followLink = response.urljoin(link)
-				yield scrapy.Request(followLink, callback=self.parse)
-		
+		try:
+			nextLinks = response.css('a::attr(href)').extract()
+			if nextLinks is not None:
+				for link in nextLinks:
+					followLink = response.urljoin(link)
+					yield scrapy.Request(followLink, callback=self.parse)
+		except Exception as e:
+			#should only happen if returned item is an image/video or etc. ignore.
+			pass
+
 	def parseForFileInclusion(self, response):
-		result = response.xpath('//text()').extract()
-		if result is not None:
-			for eachItem in result:
-				if lookFor not in eachItem:
-					pass
-				else:
-					#found
-					url = str(response)
-					url = url.replace("200 ", "")
-					splitString = cleanUp(url)
-					#TODO: add type for GET and POST
-					yield {
-						'injection_point' : splitString[0][1:],
-						'param' : splitString[1], 
-					}
-					return
+		try:
+			result = response.xpath('//text()').extract()
+			if result is not None:
+				for eachItem in result:
+					if lookFor not in eachItem:
+						pass
+					else:
+						#found
+						url = str(response)
+						url = url.replace("200 ", "")
+						splitString = cleanUp(url)
+						#TODO: add type for GET and POST
+						yield {
+							'injection_point' : splitString[0][1:],
+							'param' : splitString[1], 
+						}
+		except Exception as e:
+			#returned item is not text.not /etc/passwd.
+			pass
 def tryConnect(url):
 	ctx = ssl.create_default_context()
 	ctx.check_hostname = False

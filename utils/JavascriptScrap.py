@@ -37,7 +37,7 @@ class JavascriptScrap(BaseSpider):
         else:
             components = urlparse.urlparse(host+meth[1])
         parameters = urlparse.parse_qs(components.query)
-        result = {components.scheme+"://"+components.netloc+components.path:parameters}
+        result = {components.scheme+"://"+components.netloc+components.path:[{"type":"GET"}, parameters]}
         parsed = json.dumps(result)
         with open("test.txt", "a") as outfile:
             json.dump(result, outfile)

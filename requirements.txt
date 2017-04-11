@@ -1,0 +1,4 @@
+scrapy
+ipython
+requests
+cryptography

@@ -10,6 +10,10 @@
 
 `sudo pip3 install --upgrade scrapy` 
 
+`sudo pip3 install urlparse`
+
+`sudo pip3 install requests`
+
 2) Run
 
 `sudo chmod +x runscripts.sh`
